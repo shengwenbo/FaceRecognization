@@ -10,7 +10,7 @@ class Batcher(object):
         self.image_que = Queue()
         self.label_que = Queue()
         self.batch_size = batch_size
-        self._batch_count = 0
+        self.batch_count = 0
         self._cur_batch = 0
         self._fill_data(images, labels)
 
@@ -18,14 +18,11 @@ class Batcher(object):
         index = 0
         while True:
             if index+self.batch_size > images.shape[0]:
-                self.image_que.put(images[index:-1, :, :, :])
-                self.label_que.put(labels[index:-1])
-                self._batch_count += 1
                 return
             self.image_que.put(images[index:index+self.batch_size,:,:,:])
             self.label_que.put(labels[index:index+self.batch_size])
             index += self.batch_size
-            self._batch_count += 1
+            self.batch_count += 1
 
     def next_batch(self):
         image_batch = self.image_que.get()
@@ -33,7 +30,7 @@ class Batcher(object):
         label_batch = self.label_que.get()
         self.label_que.put(label_batch)
         self._cur_batch += 1
-        finished = self._cur_batch == self._batch_count
+        finished = self._cur_batch == self.batch_count
         if finished:
             self._cur_batch = 0
-        return self.image_que.get(), self.label_que.get(),finished
+        return image_batch, label_batch,finished

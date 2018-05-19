@@ -31,13 +31,14 @@ if __name__ == "__main__":
             count = 0
         fname = "%d_%s_%d" % (label, ("train" if isTest < 0.5 else "test"), count)
 
+        pil_image = Image.fromarray(image.reshape(64,64),"L")
+        pil_image.save("./data/PIE/images/" + fname+".jpg")
+
         if isTest > 0.5:
-            pil_image = Image.fromarray(image.reshape(64,64),"L")
-            pil_image.save("./data/PIE/images/" + fname+".jpg")
             continue
 
         i = 0
         for batch in datagen.flow(image, batch_size=1, save_to_dir="./data/PIE/images", save_prefix=fname, save_format="jpg"):
             i += 1
-            if i > 10:
+            if i > 0:
                 break

@@ -6,6 +6,12 @@ import tensorflow as tf
 from PIL import Image
 from operator import itemgetter
 
+def get_config():
+  """Returns config for tf.session"""
+  config = tf.ConfigProto(allow_soft_placement=True)
+  config.gpu_options.allow_growth=True
+  return config
+
 def load_pie(path="./data/pie"):
     file_list = []
     if os.path.isdir(path):
@@ -55,7 +61,7 @@ def get_train_data(data):
     train_data = data[data.isTest < 0.5]
     images = train_data["fea"].values
     images = np.array([x.reshape(64,64,1) for x in images], dtype=float)
-    labels = train_data["gnd"].values
+    labels = np.array(train_data["gnd"].values, dtype=np.int32)
     return images, labels
 
 
