@@ -7,7 +7,7 @@ from batcher import Batcher
     
 class VGG16(object):
 
-    def __init__(self, width, height, num_classes=69, batch_size=32, dropout_keep_prob=0.7, learning_rate=0.01, log_dir="./vgg16_log/"):
+    def __init__(self, width, height, num_classes=69, batch_size=32, dropout_keep_prob=0.7, learning_rate=0.01, log_dir="./vgg16_log/", mode="train"):
         self.width = width
         self.height = height
         self.batch_size=batch_size
@@ -15,8 +15,10 @@ class VGG16(object):
         self.learning_rate = learning_rate
         self.log_dir=log_dir
         self.num_classes=num_classes
+        self.mode = mode
 
-    def build_vgg16(self, inputs, is_training=True):
+    def build_vgg16(self, inputs):
+        is_training = self.mode == "train"
         with slim.arg_scope([slim.conv2d, slim.fully_connected],
                           activation_fn=tf.nn.relu,
                           weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
@@ -50,10 +52,11 @@ class VGG16(object):
     def eval(self, images, labels):
         with tf.get_default_graph().as_default():
 
-            inputs = tf.placeholder(dtype=tf.float32, shape=(self.batch_size, self.width, self.height, 1), name="inputs")
+            inputs = tf.placeholder(dtype=tf.float32, shape=(self.batch_size, self.width, self.height, 1),
+                                    name="inputs")
             ouputs = tf.placeholder(dtype=tf.float32, shape=(self.batch_size, 1, 1, self.num_classes), name="outputs")
 
-            predictions = self.build_vgg16(inputs, is_training=True)
+            predictions = self.build_vgg16(inputs)
 
             sess = tf.Session(config=utils.get_config())
             sess.run(tf.initialize_all_variables())
@@ -62,22 +65,24 @@ class VGG16(object):
             saver.restore(sess, ckpt_state.model_checkpoint_path)
             # 不知道不够一个batch时怎么处理，所以干脆每个数据复制batch_size次
 
-            logits = sess.run(predictions, feed_dict={"inputs:0":images})
+            logits = sess.run(predictions, feed_dict={"inputs:0": images})
             logits = logits.reshape(self.batch_size, self.num_classes)
             real_labels = np.argmax(logits, axis=1)
 
-        with tf.get_default_graph().as_default():
-            sess = tf.Session(config=utils.get_config())
+            # with tf.get_default_graph().as_default():
+            #     sess = tf.Session(config=utils.get_config())
             # 计算评价指标
-            labels_ph = tf.placeholder(labels, dtype=tf.int32, name="data_labels")
-            real_labels_ph = tf.placeholder(real_labels, dtype=tf.int32, name="model_labels")
-            accuracy,acc_op = tf.metrics.accuracy(labels_ph, real_labels_ph)
+            labels_ph = tf.placeholder(shape=labels.shape, dtype=tf.int32, name="data_labels")
+            real_labels_ph = tf.placeholder(shape=real_labels.shape, dtype=tf.int32, name="model_labels")
+            accuracy, acc_op = tf.metrics.accuracy(labels_ph, real_labels_ph)
             sess.run(tf.local_variables_initializer())
-            result = sess.run(accuracy, feed_dict={"data_labels:0":labels, })
-            print("accuracy: %f" % (result))
+            result = sess.run(acc_op, feed_dict={"data_labels:0": labels, "model_labels:0": real_labels})
+            print("Accuracy: %f" % (result))
 
-
-
+            # 打印错的
+            for l1, l2 in zip(labels, real_labels):
+                if l1 != l2:
+                    print("expect:%d\tpredict:%d" % (l1, l2))
 
     def train(self, images, labels, load_model=True):
         train_log_dir = self.log_dir
@@ -88,10 +93,11 @@ class VGG16(object):
 
             # image_batch, label_batch = utils.get_batch_data(images, labels, batch_size=self.batch_size)
 
-            inputs = tf.placeholder(dtype=tf.float32, shape=(self.batch_size, self.width, self.height, 1), name="inputs")
+            inputs = tf.placeholder(dtype=tf.float32, shape=(self.batch_size, self.width, self.height, 1),
+                                    name="inputs")
             ouputs = tf.placeholder(dtype=tf.float32, shape=(self.batch_size, 1, 1, self.num_classes), name="outputs")
 
-            predictions = self.build_vgg16(inputs, is_training=True)
+            predictions = self.build_vgg16(inputs)
             # Specify the loss function:
 
 
@@ -127,21 +133,21 @@ class VGG16(object):
                 epoch = 0
                 turn = 0
                 total_turn = 0
-                while(True):
-                    real_images,real_labels,finised = batcher.next_batch()
+                while (True):
+                    real_images, real_labels, finised = batcher.next_batch()
                     if finised:
                         epoch += 1
                         turn = 0
                     real_labels = np.eye(self.num_classes)[real_labels]
                     real_labels = np.reshape(real_labels, [real_labels.shape[0], 1, 1, real_labels.shape[1]])
-                    feed_dict={
+                    feed_dict = {
                         "inputs:0": real_images,
                         "outputs:0": real_labels
                     }
-                    _,loss,r = sess.run([train_tensor,total_loss,predictions], feed_dict)
+                    _, loss, r = sess.run([train_tensor, total_loss, predictions], feed_dict)
                     turn += 1
                     total_turn += 1
                     if turn % 100 == 0:
-                        tf.logging.info("epch: %d\tturn: %d/%d" % (epoch, turn,batcher.batch_count))
+                        tf.logging.info("epch: %d\tturn: %d/%d" % (epoch, turn, batcher.batch_count))
                         tf.logging.info("total loss: %f" % loss)
                         summary_writer.flush()

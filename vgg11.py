@@ -7,7 +7,7 @@ from batcher import Batcher
     
 class VGG11(object):
 
-    def __init__(self, width, height, num_classes=69, batch_size=32, dropout_keep_prob=0.7, learning_rate=0.001, log_dir="./vgg8_log/", mode="train"):
+    def __init__(self, width, height, num_classes=69, batch_size=32, dropout_keep_prob=0.7, learning_rate=0.001, log_dir="./vgg11_log/", mode="train"):
         self.width = width
         self.height = height
         self.batch_size=batch_size
