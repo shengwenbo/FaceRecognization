@@ -1,7 +1,7 @@
 ﻿# FaceRecognization
 学习人脸识别算法
 
-* 数据
+# 数据
 - 位置：./data/PIE
 - 格式：.mat
 |列名|说明|
@@ -9,14 +9,14 @@
 |gnd|标签,int|
 |isTest|0 or 1|
 
-* 数据处理
+# 数据处理
 - 1. 准备数据
 - 2. 建立文件夹./data/PIE/images
 - 3. 调整./data_augumentation.py第7行数据增强倍数AUGUMENT_X
 - 4. 运行./data_augumentation.py
 - 将在./data/PIE/images生成增强后的图片
 
-* 训练&测试
+# 训练&测试
 - 1. 数据处理
 - 2. 运行./main.py
   - 参数1：
