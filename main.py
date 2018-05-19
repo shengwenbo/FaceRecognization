@@ -9,13 +9,17 @@ import  sys
 
 if __name__ == "__main__":
     mode = sys.argv[1]
+    data_from = sys.argv[2]
+    data_path = sys.argv[3]
 
-    # data = utils.load_pie_jpg("C:/images")
-    # with open("./data/PIE/data.pkl", "wb") as fout:
-    #     pickle.dump(data, fout)
+    if data_from == "image":
+        data = utils.load_pie_jpg(data_path)
+        with open("./data/PIE/data.pkl", "wb") as fout:
+            pickle.dump(data, fout)
 
-    with open("./data/PIE/data.pkl", "rb") as fin:
-        data = pickle.load(fin)
+    else:
+        with open("./data/PIE/data.pkl", "rb") as fin:
+            data = pickle.load(fin)
 
     data = data.sample(frac=1).reset_index(drop=True)
     train_data = utils.get_train_data(data)

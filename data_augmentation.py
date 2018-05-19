@@ -4,6 +4,9 @@ from PIL import Image
 import os
 import collections
 
+AUGUMENT_X = 5
+DIR_PATH = "./data/PIE/images/"
+
 if __name__ == "__main__":
 
     counter = collections.Counter()
@@ -32,13 +35,16 @@ if __name__ == "__main__":
         fname = "%d_%s_%d" % (label, ("train" if isTest < 0.5 else "test"), count)
 
         pil_image = Image.fromarray(image.reshape(64,64),"L")
-        pil_image.save("./data/PIE/images/" + fname+".jpg")
+        pil_image.save(DIR_PATH + fname+".jpg")
 
         if isTest > 0.5:
             continue
 
+        if AUGUMENT_X == 0:
+            continue
+
         i = 0
-        for batch in datagen.flow(image, batch_size=1, save_to_dir="./data/PIE/images", save_prefix=fname, save_format="jpg"):
+        for batch in datagen.flow(image, batch_size=1, save_to_dir=DIR_PATH, save_prefix=fname, save_format="jpg"):
             i += 1
-            if i > 0:
+            if i > 5:
                 break
