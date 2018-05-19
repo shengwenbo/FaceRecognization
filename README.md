@@ -7,7 +7,7 @@
 
 |列名|说明|
 |:----:|:----:|
-|fea|图像数据，64*64*1|
+|fea|图像数据，64\*64\*1|
 |gnd|标签,int|
 |isTest|0 or 1|
 
@@ -31,8 +31,8 @@
     - <文件夹路径>：image时设置文件夹路径，建议存固态硬盘
     - pickle：pickle时占位，无意义
   - 示例：
-    - python ./main.py train image C:/images
-    - python ./main.py eval pickle pickle
+    - `python ./main.py train image C:/images`
+    - `python ./main.py eval pickle pickle`
 - 3. 等待训练/测试完成
   - 训练时可以随时关闭，下次开启时自动继续训练
 
